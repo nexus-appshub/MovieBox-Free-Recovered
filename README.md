@@ -1,24 +1,31 @@
 # MovieBox Free — APK Recovery
 
-This repository is the recovery workspace for the user-provided MovieBox Android APK.
+This repository contains an initial, buildable Android recovery shell plus the APK analysis notes.
 
-## Current status
+## Build status
 
-- APK inspected: `moviebox-v-4.0.04.1119.03.apk` (version label from uploaded filename).
-- APK package structure and selected assets inventoried.
-- The APK does **not** currently yield a normal, recoverable Android application source tree.
-- No Gradle project has been reconstructed yet, so an Android build workflow is intentionally not enabled. Adding a workflow before a valid Gradle project exists would only create a misleading failing build.
+A minimal Android application scaffold and GitHub Actions workflow are now present. Every push affecting the Android project or workflow triggers a debug APK build; a manual run is also available under **Actions → Android APK Build → Run workflow**.
+
+The generated APK is a **placeholder recovery shell**, not the recovered MovieBox application. It shows the navigation/category names recovered from the APK configuration, but does not yet implement MovieBox's original screens, media APIs, account system, downloads, or playback.
+
+## Downloading the build
+
+After the workflow succeeds:
+1. Open the repository's **Actions** tab.
+2. Select the latest **Android APK Build** run.
+3. Download the `moviebox-recovery-debug-apk` artifact.
 
 ## Recovery objectives
 
 1. Reconstruct the app's own UI and functionality as closely as the available evidence allows.
-2. Remove the app's own advertising placements and ad SDK integrations where they can be identified safely.
-3. Remove the app owner's own VIP/paywall restrictions, without bypassing authorization imposed by third-party content providers.
-4. Preserve playback, downloads, navigation, and other existing features where technically possible.
-5. Add a reproducible Gradle build and GitHub Actions APK artifact workflow after a valid project is recovered.
+2. Remove the app owner's own advertising placements and VIP/paywall restrictions where their implementation can be identified and safely changed.
+3. Preserve playback, downloads, navigation, and other features where technically possible.
+4. Keep third-party provider authorization and access controls intact.
 
-## Evidence and limitations
+## Important limitations
 
-See [APK analysis](docs/APK_ANALYSIS.md) for the technical findings and blockers.
-
-**Important:** Decompiled/reconstructed code is not the original source. Obfuscation, encrypted payloads, native libraries, and missing backend/API details may prevent exact recovery. No claim of a successful app build is made until a real Gradle project is present and CI passes.
+- The original APK is protected/packed; its real implementation has not been recovered.
+- The current shell is only a build-pipeline proof and must not be represented as an exact MovieBox clone.
+- No decrypted DEX, original source tree, ad-free production build, or VIP-free production build has been produced.
+- Decompiled/reconstructed code is not the original source.
+- The app uses a separate package ID (`com.moviebox.recovered`) so it can be installed alongside the original app for shell testing.
