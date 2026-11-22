@@ -80,3 +80,30 @@ The app's own UI/entitlement checks can only be safely removed after identifying
 ## Tooling note
 
 At the time of this inspection, `java` is installed, but `jadx`, `apktool`, `aapt`, `aapt2`, `dexdump`, and `baksmali` are not installed. The environment cannot resolve GitHub hosts from the container, so downloading a decompiler from the internet is not currently possible. No decompilation or APK rebuild has been claimed.
+
+
+## Additional protector identification (2026-11-22)
+
+A second static pass identified a much more specific explanation for the sparse DEX:
+
+- The APK bundles `lib/arm64-v8a/libijm_linker.so` and `lib/armeabi-v7a/libijm_linker.so`.
+- The native library exports IJM-specific symbols including `ijm_linker_init`, `ijm_linker_fini`, `ijm_vmp`, and JNI_OnLoad hook functions.
+- `lib/arm64-v8a/libmediatutil.so` contains the literal strings `g_ijiami_hahaha` and `ijiami`.
+- The large opaque asset `assets/Qpq9X3WRH` begins with the byte sequence `indl01\0\0` and is 9,645,180 bytes.
+- Other opaque assets include `assets/IKoUJEL` (282,224 bytes), `assets/GAT1Q72o` (202,960 bytes), `assets/Ye5TS3h` (96,736 bytes), `assets/labresencscfg` (455 bytes), and `assets/lable_art_xxx.lab` (664 bytes).
+
+**Assessment:** These independent indicators strongly identify an IJM/ijiami-family runtime protection/packing layer. The 68.3 MB `classes.dex` is therefore likely a loader/stub rather than the app's full implementation, and `assets/Qpq9X3WRH` is a strong candidate for the protected payload. The exact payload format, cipher, key derivation, and whether the asset contains one or multiple code/data sections have not yet been proven from this APK alone. Do not assume a particular AES mode or hard-code a decryption routine without validating the loader.
+
+### Practical recovery route
+
+Static file extraction alone is unlikely to recover the real DEX if the loader decrypts it only at runtime. The technically appropriate next step is a controlled runtime capture on an Android test device/emulator:
+
+1. Install and launch this exact APK in an isolated test environment.
+2. Observe the process after the IJM loader initializes and the app's real classes are available to ART.
+3. Capture loaded DEX buffers / class-loader paths and any decrypted temporary payloads; validate every result by checking DEX magic/version and opening it with JADX.
+4. Repeat for all app flows needed to recover dynamically loaded feature modules.
+5. Preserve the original APK and capture hashes; never modify the original during evidence collection.
+
+This environment currently has no Android device/ADB connection, Frida runtime, JADX, or APKTool, and cannot install external packages because outbound DNS/network access is unavailable. Therefore no runtime dump or decrypted payload has been produced. A connected Android test device with USB debugging (or a prepared emulator) is the missing execution capability; it cannot be simulated by further static inspection alone.
+
+The IJM/ijiami finding is a high-confidence protector-family identification based on the APK's own native symbols and strings. It is not yet a successful unpack/decryption.
