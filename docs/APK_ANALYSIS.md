@@ -15,6 +15,19 @@
 
 The mismatch between a 68.3 MB DEX and only four class definitions/212 strings is a strong indication that this is not a conventional fully compiled app DEX. The APK also contains a 9.6 MB opaque asset at `assets/Qpq9X3WRH` (starts with `indl01`, not a ZIP or DEX header), consistent with a protected/packed payload. This finding blocks ordinary source-level reconstruction from the DEX alone.
 
+## Android manifest facts
+
+The binary manifest was parsed directly:
+- Package/application ID: `com.community.oneroom`.
+- Version name: `4.0.04.1119.03`.
+- Version code: `50020137`.
+- Minimum SDK: 24.
+- Target SDK: 36.
+- The manifest declares SDK components for Hisavana, Pangle/ByteDance OpenAds, Mintegral/MBridge, Vungle, and Transsion advertising. This is stronger evidence that ad SDK code is packaged, but it still does not establish which placements are actually requested at runtime.
+- Manifest metadata includes `tran_hisavana_version=3.6.8.2` and `com.bytedance.sdk.pangle.version=7.1.1.4`.
+
+Manifest/API-like host strings include `api.byte-app.com`, `api.eagllwin.com`, `api.sunnbird.com`, `h5.aoneroom.com`, and several MovieBox-related domains. These are **candidate hosts only**: their presence in the manifest string pool does not prove which one serves playback, account, or entitlement APIs. The manifest also includes `AD_SUBMIT_FORM=https://api.eagllwin.com`, which appears to be a mini-app/ad-form endpoint rather than a confirmed media API.
+
 ## Build metadata
 
 - Android Gradle Plugin metadata: `8.13.2`.
@@ -53,7 +66,7 @@ The APK bundles native libraries for MPV, FFmpeg (including codec/format/filter/
 
 ## API and entitlement status
 
-The inspected static assets do not expose a confirmed playback API base URL or enough information to map all account/VIP checks. Anime category configuration is visible, but title/episode APIs and the Hindi playback source for any particular series cannot be established from this asset inventory.
+The manifest exposes candidate API/domain strings (listed above), but static inspection still does not identify a confirmed playback API base URL or enough information to map all account/VIP checks. Anime category configuration is visible, but title/episode APIs and the Hindi playback source for any particular series cannot be established from this asset inventory.
 
 The app's own UI/entitlement checks can only be safely removed after identifying their implementation and backend contract. Third-party provider authentication or access checks must remain intact; this recovery will not attempt to circumvent those controls.
 
